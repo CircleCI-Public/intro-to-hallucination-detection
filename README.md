@@ -3,39 +3,148 @@ Sample repository to accompany the deeplearning.ai course on evaluations.
 
 
 ## Setting up the project
-Describe the sample project we’ll be using in the tutorial
+
+In this tutorial you will build an AI powered quiz generator using OpenAI, LangChain, and CircleCI.
+
+Our application consists of the following:
+* A test bank of questions containing facts about science, geography, and art
+* A prompt to a Large Language Model (LLM) that takes in the facts and writes a question customized to a student's request based on the facts
+* A python CLI that takes in the user's question and sends requests to OpenAIs ChatGPT model.
 
 ## Walk through the setup steps
 
+To complete this tutorial you will need:
+* An OpenAI API key
+* A GitHub account
+* A CircleCI account
+
+We assume basic familiarity with Python, but no prior experience with AI models is needed.
+
 ### Demonstrate how it works
 
-### Example hallucination
+Let's ask our quiz assistant about Art
+```bash
+python app.py "Write a fun quiz about Art"
+```
+We get a response like this, you may get a different set of questions this is normal for generative applications. We want some variety in our responses:
+> Question 1: Who painted the Mona Lisa?
+>
+> Question 2: What famous painting captures the east-facing view of van Gogh's room in Saint-Rémy-de-Provence?
+>
+> Question 3: Where is the Louvre, the museum where the Mona Lisa is displayed, located?
+
+All of these questions are based on facts in our quiz bank, so this looks pretty good.
 
 #### Give a basic example of a hallucinated response 
 
-Describe other ways hallucinations could affect different types of apps and the impact on users/developers/businesses
+Now let's try asking the assistant about Math, something we haven't provided any information about in the quiz bank:
+
+```bash
+python app.py "Write a quiz about math"
+```
+
+And the questions we get back are:
+> Question 1: What is the value of pi (π) to two decimal places?
+>
+> Question 2: Solve the equation: 2x + 5 = 15
+>
+> Question 3: What is the square root of 64?
+
+So, even though we didn't give the application about facts about math, it still generated questions based on data in the training set. This is generally called a "hallucination"
+
+In this case, these questions are actually solvable but there's two issues here:
+* If we were creating a real quiz application we wouldn't want to give students questions that aren't part of the curriculum we are teaching or that were inaccurate.
+* In other applications, for example answering questions about documentation the application making up answers could give users incorrect or useless information.
 
 ## Adding CI
-Explain how an automated eval pipeline can help catch these types of issues before they reach users, accelerating your model tuning processes and increasing confidence in your delivery cycles
+
+todo: Jacob to fill in
 
 ### CircleCI config file
-Setting up a hallucination-detecting evaluation pipeline
-Show off the CircleCI config file
+
+Let's take a look at our config file
+
+```yaml
+version: 2.1
+orbs:
+  python: circleci/python@2.1.1
+
+workflows:
+  evaluate-commit:
+    jobs:
+      - run-commit-evals:
+          context:
+            - dl-ai-courses
+
+jobs:
+  run-commit-evals:
+    docker:
+      - image: cimg/python:3.10.5
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run assistant evals.
+          command: python -m pytest --junitxml results.xml test_hallucinations.py
+      - store_test_results:
+          path: results.xml
+```
+
+
 
 ##### Config walk through
-Explain the key points in a bulleted list calling out the important lines
+Here are some important details about the config:
+
+* The `python` orb handles common tasks for python applications like installing dependencies and caching them between CI runs
+* The `evaluate-commit` workflow runs each time we push our code to the repository, it has one job nammed `run-commit-evals`
+* The `run-commit-evals` job uses a context called `dl-ai-courses`, contexts are place to store secrets like API credentials
+* Our job has 4 steps:
+  - `checkout` clones our repo with the changes we pushed to GitHub
+  - `python/install-packages` handles installing our dependencies and caching them
+  - `python -m pytest --junitxml results.xml test_hallucinations.py` runs our tests and save the results in junit xml
+  - `store_test_results` saves the results of our tests so we can easily see what passed and failed.
 
 ### Setup a project
-Explain how to set the project up on CircleCI
+To try this out in your own project create a [CircleCI Account](https://circleci.com/signup/) and connect your repository.
 
 ### Running the pipeline
-Update the model prompt to force a hallucination
+
+Let's run the pipeline as is with the hallucination to see our tests fail.
 
 #### A failing test
 Demo the pipeline running and catching the error
 
 #### Fixing the test
-Fix the prompt (simulating what a prompt engineer might do in response)
+We can make a small change to our prompt to reduce hallucinations about unknown categories by adding the following text:
+
+> If a user asks about another category respond: "I can only generate quizzes for Art, Science, or Geography"
+
+```markdown
+Write a quiz for the category the user requests.
+
+## Steps to create a quiz
+
+Step 1:{delimiter} First identify the category user is asking about. Allowed categories are:
+* Art
+* Science
+* Geography
+
+If a user asks about another category respond: "I can only generate quizzes for Art, Science, or Geography"
+
+Step 2:{delimiter} Based on the category, select the facts to generate questions about from the following list:
+
+{quiz_bank}
+
+Step 3:{delimiter} Generate a quiz with three questions for the user.
+
+Use the following format:
+Question 1:{delimiter} <question 1>
+
+Question 2:{delimiter} <question 2>
+
+Question 3:{delimiter} <question 3>
+```
 
 Show the pipeline building green
 

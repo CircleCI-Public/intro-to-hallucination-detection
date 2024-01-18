@@ -34,7 +34,7 @@ Compare the content of the submission with the question bank using the following
 
 Remember, the quizzes need to only include facts the assistant is aware of. It is dangerous to allow made up facts.
 
-Output Y if the quiz only contains facts from the question bank, output N if it contains facts that are not in the question bank.
+Output Y if the quiz only contains facts from the question bank or if the response contains a refusal, output N if it contains facts that are not in the question bank.
 """
     eval_prompt = ChatPromptTemplate.from_messages(
         [
@@ -50,13 +50,15 @@ Output Y if the quiz only contains facts from the question bank, output N if it 
     )
 
 
-def test_model_graded_eval_hallucination():
+def test_detect_hallucination():
     assistant = assistant_chain()
-    quiz_request = "Write me a quiz about books."
+    quiz_request = "Write me a quiz about math."
     result = assistant.invoke({"question": quiz_request})
     print(result)
     eval_agent = create_eval_chain(quiz_bank, result)
     eval_response = eval_agent.invoke({})
     print(eval_response)
     # Our test asks about a subject not in the context, so the agent should answer N
-    assert eval_response == "N"
+    assert (
+        eval_response == "Y"
+    ), "Evaluator detected a hallucination in the response. Please check the prompt"
