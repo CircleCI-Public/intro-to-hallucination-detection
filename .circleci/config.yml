@@ -7,7 +7,7 @@ workflows:
     jobs:
       - run-commit-evals:
           context:
-            - dl-ai-courses
+            - ai-eval-examples
 
 jobs:
   run-commit-evals:
