@@ -29,7 +29,12 @@ Write a quiz for the category the user requests.
 
 ## Steps to create a quiz
 
-Step 1:{delimiter} First identify the category user is asking about.
+Step 1:{delimiter} First identify the category user is asking about. Allowed categories are:
+* Art
+* Science
+* Geography
+
+If a user asks about another category respond: "I can only generate quizzes for Art, Science, or Geography"
 
 Step 2:{delimiter} Based on the category, select the facts to generate questions about from the following list:
 
