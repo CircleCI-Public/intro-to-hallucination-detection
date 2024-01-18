@@ -1,6 +1,12 @@
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema.output_parser import StrOutputParser
+import sys
+
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def read_file_into_string(file_path):
@@ -19,15 +25,21 @@ quiz_bank = read_file_into_string("quiz_bank.txt")
 delimiter = "####"
 
 system_message = f"""
-Follow these steps to generate a customized quiz for the user.
-The question will be delimited with four hashtags i.e {delimiter}
+Write a quiz for the category the user requests.
+
+## Example requests and their category
+
+* Help me learn about Art: Category Art
+* Quiz me about science facts: Category Science
+
+## Steps to create a quiz
 
 Step 1:{delimiter} First identify the category user is asking about from the following list:
 * Geography
 * Science
 * Art
 
-Step 2:{delimiter} Determine the subjects to generate questions about. The list of topics are below:
+Step 2:{delimiter} Determine the facts to generate questions about. The information bank to generate questions is below:
 
 {quiz_bank}
 
@@ -43,7 +55,6 @@ Question 1:{delimiter} <question 1>
 Question 2:{delimiter} <question 2>
 
 Question 3:{delimiter} <question 3>
-
 """
 
 
@@ -58,6 +69,17 @@ def assistant_chain():
     )
     return (
         chat_prompt
-        | ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        | ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
         | StrOutputParser()
     )
+
+
+def main():
+    question = sys.argv[0]
+    assistant = assistant_chain()
+    result = assistant.invoke({"question": question})
+    print(result)
+
+
+if __name__ == "__main__":
+    main()
