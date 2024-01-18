@@ -108,6 +108,14 @@ Here are some important details about the config:
 ### Setup a project
 To try this out in your own project create a [CircleCI Account](https://circleci.com/signup/) and connect your repository.
 
+#### Detecting the hallucinations
+
+We defined a test in [test_hallucinations.py](./test_hallucinations.py) so we can find out if our application is generating quizzes that aren't in our test bank.
+
+This is a basic example of a Model Graded Evaluation where we use one large language model to review the results of AI generated output.
+
+In our prompt, we provide ChatGPT with the user's category, the quiz bank, and the generated quiz and ask it to check that the generated quiz only contains facts in the quiz bank or includes a response saying it can't generate a quiz about that subject.
+
 ### Running the pipeline
 
 Let's run the pipeline as is with the hallucination to see our tests fail.
@@ -119,6 +127,8 @@ Demo the pipeline running and catching the error
 We can make a small change to our prompt to reduce hallucinations about unknown categories by adding the following text:
 
 > If a user asks about another category respond: "I can only generate quizzes for Art, Science, or Geography"
+
+Here's the complete updated prompt
 
 ```markdown
 Write a quiz for the category the user requests.
@@ -146,10 +156,11 @@ Question 2:{delimiter} <question 2>
 Question 3:{delimiter} <question 3>
 ```
 
-Show the pipeline building green
+Let's push our code and see a new green pipeline with our test passing.
 
 ## Conclusion
-Recap what you learned and why it’s valuable
 
-Encourage readers to learn more about automating LLM evaluations by visiting our DeepLearning.ai course
+In this tutorial we covered how to use OpenAI's ChatGPT model to build an application, how to write tests to tell if the model is hallucinating information, and running that test in an automatically to detect regressions in your application.
+
+If you want to learn more about model evaluations and LLM app testing, check out our course on deeplearning.ai
 
