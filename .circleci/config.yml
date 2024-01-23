@@ -1,0 +1,24 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.1.1
+
+workflows:
+  evaluate-commit:
+    jobs:
+      - run-commit-evals:
+          context:
+            - ai-eval-examples
+
+jobs:
+  run-commit-evals:
+    docker:
+      - image: cimg/python:3.10.5
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run assistant evals.
+          command: python -m pytest --junitxml results.xml test_hallucinations.py
+      - store_test_results:
+          path: results.xml
